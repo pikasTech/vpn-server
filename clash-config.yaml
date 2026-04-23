@@ -1,0 +1,79 @@
+mixed-port: 7890
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+external-controller: '127.0.0.1:9090'
+
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  use-hosts: true
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  fallback:
+    - https://doh.dns.sb/dns-query
+    - https://dns.cloudflare.com/dns-query
+    - tls://8.8.4.4:853
+  fallback-filter:
+    geoip: true
+    ipcidr:
+      - 240.0.0.0/4
+      - 0.0.0.0/32
+
+proxies:
+  - name: "VPN-Trojan"
+    type: trojan
+    server: 74.48.78.17
+    port: 443
+    password: "12a90b0b-0465-429f-8f36-14b2ebdaef5d"
+    skip-cert-verify: true
+    sni: 74-48-78-17.nip.io
+    network: ws
+    ws-opts:
+      path: /
+      headers:
+        Host: 74-48-78-17.nip.io
+
+proxy-groups:
+  - name: "Proxy"
+    type: select
+    proxies:
+      - VPN-Trojan
+      - 自动选择
+      - 故障转移
+
+  - name: 自动选择
+    type: url-test
+    proxies:
+      - VPN-Trojan
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 86400
+
+  - name: 故障转移
+    type: fallback
+    proxies:
+      - VPN-Trojan
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 7200
+
+rules:
+  - 'DOMAIN-SUFFIX,google.com,Proxy'
+  - 'DOMAIN-SUFFIX,facebook.com,Proxy'
+  - 'DOMAIN-SUFFIX,youtube.com,Proxy'
+  - 'DOMAIN-SUFFIX,github.com,Proxy'
+  - 'DOMAIN-SUFFIX,twitter.com,Proxy'
+  - 'DOMAIN-SUFFIX,instagram.com,Proxy'
+  - 'DOMAIN-SUFFIX,dropbox.com,Proxy'
+  - 'DOMAIN-SUFFIX,netflix.com,Proxy'
+  - 'DOMAIN-SUFFIX,twimg.com,Proxy'
+  - 'IP-CIDR,91.108.4.0/22,Proxy,no-resolve'
+  - 'IP-CIDR,149.154.160.0/20,Proxy,no-resolve'
+  - 'DOMAIN,injections.adguard.org,DIRECT'
+  - 'DOMAIN-SUFFIX,cn,DIRECT'
+  - 'DOMAIN-KEYWORD,-cn,DIRECT'
+  - 'GEOIP,CN,DIRECT'
+  - 'MATCH,Proxy'

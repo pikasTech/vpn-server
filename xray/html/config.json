@@ -1,0 +1,29 @@
+{
+    "log": {
+        "loglevel": "warning"
+    },
+    "inbounds": [{
+        "port": 443,
+        "protocol": "vless",
+        "settings": {
+            "clients": [{
+                "id": "bceaaa11-eed1-4660-9868-447fb76cd968",
+                "level": 0
+            }],
+            "decryption": "none"
+        },
+        "streamSettings": {
+            "network": "tcp",
+            "security": "tls",
+            "tlsSettings": {
+                "certificates": [{
+                    "certificateFile": "/etc/xray/certs/fullchain.pem",
+                    "keyFile": "/etc/xray/certs/privkey.pem"
+                }]
+            }
+        }
+    }],
+    "outbounds": [{
+        "protocol": "freedom"
+    }]
+}

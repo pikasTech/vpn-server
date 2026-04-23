@@ -1,0 +1,1 @@
+vless://61c94bb7-f3b2-42e8-aad8-c1458180e91b@74.48.78.17:8443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.microsoft.com&fp=chrome&pbk=sfGFg03US2bNgJ9XYdpI7-W63eG7_19ayIZrA7sluio&sid=67b856afffcc5dda&type=tcp#US-Reality

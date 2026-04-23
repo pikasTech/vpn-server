@@ -1,0 +1,11 @@
+{
+    "server":["[::0]","0.0.0.0"],
+    "server_port":443,
+    "password":"zZnoRPKunONsi6bLADbW2wTAUhJYUtE",
+    "method":"chacha20-ietf-poly1305",
+    "plugin":"/usr/local/bin/v2ray-plugin",
+    "plugin_opts":"server;tls;cert=/etc/letsencrypt/live/74-48-78-17.nip.io/fullchain.pem;key=/etc/letsencrypt/live/74-48-78-17.nip.io/privkey.pem;host 74-48-78-17.nip.io;loglevel warn",
+    "fast_open":true,
+    "reuse_port":true,
+    "nameserver":"8.8.8.8"
+}

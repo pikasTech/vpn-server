@@ -1,0 +1,14 @@
+services:
+  ss-v2ray:
+    build: .
+    container_name: ss-v2ray
+    restart: always
+    ports:
+      - "443:443/tcp"
+      - "443:443/udp"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    environment:
+      - CERT_PATH=/etc/letsencrypt/live/74-48-78-17.nip.io/fullchain.pem
+      - KEY_PATH=/etc/letsencrypt/live/74-48-78-17.nip.io/privkey.pem
+    command: ss-server -c /etc/shadowsocks-libev/config.json

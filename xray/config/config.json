@@ -1,0 +1,29 @@
+{
+    "log": {
+        "loglevel": "warning"
+    },
+    "inbounds": [{
+        "port": 443,
+        "protocol": "trojan",
+        "settings": {
+            "clients": [{
+                "password": "12a90b0b-0465-429f-8f36-14b2ebdaef5d",
+                "level": 0
+            }]
+        },
+        "streamSettings": {
+            "network": "tcp",
+            "security": "tls",
+            "tlsSettings": {
+                "certificates": [{
+                    "certificateFile": "/etc/xray/certs/fullchain.pem",
+                    "keyFile": "/etc/xray/certs/privkey.pem"
+                }],
+                "alpn": ["http/1.1"]
+            }
+        }
+    }],
+    "outbounds": [{
+        "protocol": "freedom"
+    }]
+}

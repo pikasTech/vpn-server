@@ -1,0 +1,17 @@
+*.tmp
+*.log
+*.pid
+__pycache__/
+*.pyc
+dist/
+build/
+*.o
+*.obj
+node_modules/
+.env
+.cache/
+*.wav
+*.mp3
+*.png
+*.jpg
+*.pdf

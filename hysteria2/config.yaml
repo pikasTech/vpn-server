@@ -1,0 +1,15 @@
+listen: :8444
+
+tls:
+  cert: /etc/hysteria/fullchain.pem
+  key: /etc/hysteria/privkey.pem
+
+auth:
+  type: password
+  password: hy2-egN0LsNwiLsNwcNkgMcnYLSg
+
+masquerade:
+  type: proxy
+  proxy:
+    url: https://www.microsoft.com/
+    rewriteHost: true

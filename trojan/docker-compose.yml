@@ -1,0 +1,30 @@
+services:
+  trojan:
+    image: teddysun/trojan:latest
+    container_name: trojan
+    restart: always
+    ports:
+      - "443:443"
+    volumes:
+      - ./config:/etc/trojan
+      - ./certs:/etc/trojan/certs
+    networks:
+      - trojan-net
+    depends_on:
+      - nginx
+    command: trojan -c /etc/trojan/config.json
+
+  nginx:
+    image: nginx:alpine
+    container_name: trojan-nginx
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./html:/var/www/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - trojan-net
+
+networks:
+  trojan-net:
