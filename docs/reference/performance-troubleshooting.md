@@ -1,100 +1,100 @@
-# Performance Troubleshooting
+# 性能故障排除
 
-## Goal
+## 目标
 
-This document records stable troubleshooting methods, tuning conclusions, and current baselines for separating VPS bandwidth issues, client-to-server path issues, and protocol-stack issues.
+本文档记录了用于区分 VPS 带宽问题、客户端到服务器路径问题和协议栈问题的稳定故障排除方法、调优结论和当前基准。
 
-## Measurement Model
+## 测量模型
 
-Always separate these three segments:
+始终分离这三个段：
 
-1. VPS outbound speed to the public Internet
-2. Client direct speed to the server distribution port
-3. Client speed through the proxy stack
+1. VPS 到公网的出口速度
+2. 客户端直接到服务器分发端口的速度
+3. 客户端通过代理堆栈的速度
 
-If one segment is much slower than the others, do not treat the result as a generic server-bandwidth problem.
+如果某一段比其它段慢很多，不要将结果视为通用服务器带宽问题。
 
-## Reusable Test Methods
+## 可重用测试方法
 
-### 1. VPS Self-Test
+### 1. VPS 自测
 
-Use this to confirm that the VPS itself still has healthy public bandwidth.
+用于确认 VPS 本身仍有健康的公网带宽。
 
 ```bash
 curl -L -o /dev/null -w 'status=%{http_code} time=%{time_total}s speed=%{speed_download}B/s
 '   https://cachefly.cachefly.net/50mb.test --max-time 90
 ```
 
-### 2. Client Direct-to-Server Test
+### 2. 客户端直连服务器测试
 
-Use this to measure the raw client-to-server path.
+用于测量客户端到服务器的原始路径。
 
 ```powershell
 curl.exe --noproxy '*' -L -o NUL -w "status=%{http_code} time=%{time_total}s speed=%{speed_download}B/s`n"   http://74.48.78.17:8080/speed-100m.bin --max-time 90
 ```
 
-### 3. Client Through-Proxy Test
+### 3. 客户端通过代理测试
 
-Use this to measure the practical proxy result.
+用于测量实际代理结果。
 
 ```powershell
 curl.exe --socks5-hostname 127.0.0.1:7890 -L -o NUL -w "status=%{http_code} time=%{time_total}s speed=%{speed_download}B/s`n"   https://cachefly.cachefly.net/50mb.test --max-time 90
 ```
 
-## Stable Baseline Conclusions
+## 稳定基准结论
 
-The current reusable conclusions are:
+当前可重用的结论：
 
-- The VPS itself downloads from the public Internet at about `83-99 MB/s`, so the server is not the bottleneck.
-- Client direct download from the server distribution port is only about `0.14-0.15 MB/s` on the problematic TCP path.
-- TCP-based proxy tests stay in the same very low range, so the weak segment is the client-to-server path, not VPS bandwidth.
-- On the same fixed region and path, switching from TCP-based mainline to UDP-based Hysteria2 is the only change that produces an order-of-magnitude improvement.
+- VPS 本身从公网下载约 `83-99 MB/s`，所以服务器不是瓶颈。
+- 客户端从服务器分发端口直接下载在有问题的 TCP 路径上仅约 `0.14-0.15 MB/s`。
+- 基于 TCP 的代理测试保持在相同的极低范围，所以弱段是客户端到服务器的路径，而非 VPS 带宽。
+- 在相同固定地域和路径上，从基于 TCP 的主线路切换到基于 UDP 的 Hysteria2 是产生数量级改进的唯一变化。
 
-## Mainline Tuning Outcome
+## 主线路调优结果
 
-The current best stable Hysteria2 policy is:
+当前最佳稳定 Hysteria2 策略：
 
-- Server side: do not set `bandwidth` in `/root/vpn-server/hysteria2/config.yaml`
-- Published client YAML: `up: 40 mbps / down: 80 mbps`
-- v2rayN Hysteria global values: `UpMbps = 40`, `DownMbps = 80`, `HopInterval = 30`
+- 服务器端：不要在 `/root/vpn-server/hysteria2/config.yaml` 中设置 `bandwidth`
+- 发布的客户端 YAML：`上传: 40 mbps / 下载: 80 mbps`
+- v2rayN Hysteria 全局值：`UpMbps = 40`，`DownMbps = 80`，`HopInterval = 30`
 
-With this policy, the current path typically reaches:
+使用此策略，当前路径通常达到：
 
-- Single-stream Hysteria2 download: about `8-9 MB/s`
-- Parallel Hysteria2 downloads: about `9-11 MB/s`
+- 单流 Hysteria2 下载：约 `8-9 MB/s`
+- 并行 Hysteria2 下载：约 `9-11 MB/s`
 
-## Tuning Findings That Matter
+## 重要的调优发现
 
-The following distilled findings should guide future tuning:
+以下提炼的发现应指导未来调优：
 
-- A server-side `bandwidth.up: 100 mbps` cap creates a practical ceiling near `12.5 MB/s`, which limits aggregate download throughput.
-- Removing the server-side `bandwidth` section is better than keeping an underestimated hard cap.
-- The current path does not benefit from aggressively over-declared client bandwidth.
-- Client values around `down: 80 mbps` are the current sweet spot.
-- Raising the client declaration too far, such as `150 mbps` or `1000 mbps`, makes throughput worse instead of better.
-- A temporary UDP `443` test instance did not materially outperform the normal `8444/udp` mainline, so there is no stable evidence that moving the mainline port to `443/udp` is worthwhile.
+- 服务器端 `bandwidth.up: 100 mbps` 上限在约 `12.5 MB/s` 处创建实际天花板，限制了聚合下载吞吐量。
+- 移除服务器端 `bandwidth` 部分比保留低估的硬限制更好。
+- 当前路径不受益于激进过度声明的客户端带宽。
+- 客户端值约 `下载: 80 mbps` 是当前的甜蜜点。
+- 将客户端声明提高太多，如 `150 mbps` 或 `1000 mbps`，会使吞吐量变差而非变好。
+- 临时的 UDP `443` 测试实例没有明显优于正常的 `8444/udp` 主线路，因此没有稳定证据表明将主线路端口移到 `443/udp` 是值得的。
 
-## Parameter Sweep Summary
+## 参数扫描总结
 
-The following parameter sweep produced the stable recommendation:
+以下参数扫描产生了稳定建议：
 
-- `up: 40 mbps / down: 80 mbps`: about `9.2 MB/s`, best stable result
-- `up: 80 mbps / down: 80 mbps`: about `9.2 MB/s`, similar but not better
-- `up: 60 mbps / down: 90 mbps`: about `9.19 MB/s`, similar but not better
-- `up: 80 mbps / down: 90 mbps`: about `9.06 MB/s`, slightly worse
-- `up: 150 mbps / down: 150 mbps`: materially worse
-- `up: 1000 mbps / down: 1000 mbps`: much worse
-- no client `bandwidth` section: worse than the tuned range
+- `上传: 40 mbps / 下载: 80 mbps`：约 `9.2 MB/s`，最佳稳定结果
+- `上传: 80 mbps / 下载: 80 mbps`：约 `9.2 MB/s`，相似但未更好
+- `上传: 60 mbps / 下载: 90 mbps`：约 `9.19 MB/s`，相似但未更好
+- `上传: 80 mbps / 下载: 90 mbps`：约 `9.06 MB/s`，稍差
+- `上传: 150 mbps / 下载: 150 mbps`：明显更差
+- `上传: 1000 mbps / 下载: 1000 mbps`：更差
+- 无客户端 `bandwidth` 部分：比调优范围差
 
-For future maintenance, treat `40/80` as the default recommendation unless repeated testing on a new path proves otherwise.
+对于未来维护，将 `40/80` 作为默认建议，除非在新的路径上重复测试证明其他值更好。
 
-## Excluded Variables
+## 排除的变量
 
-The following factors have already been checked and should not be rediscovered as main explanations without new evidence:
+以下因素已检查，不应在没有新证据的情况下重新发现为主解释：
 
-- Re-testing from another local network did not materially change throughput.
-- The server region is fixed and is not part of the current optimization space.
-- Basic Linux queue and TCP settings already keep the server in a reasonable baseline state:
+- 从另一个本地网络重新测试没有显著改变吞吐量。
+- 服务器地域是固定的，不在当前优化空间内。
+- 基本的 Linux 队列和 TCP 设置已使服务器保持合理的基线状态：
   - `net.ipv4.tcp_congestion_control = bbr`
   - `net.core.default_qdisc = fq`
   - `net.core.rmem_max = 67108864`
@@ -102,23 +102,23 @@ The following factors have already been checked and should not be rediscovered a
   - `net.core.rmem_default = 1048576`
   - `net.core.wmem_default = 1048576`
 
-## Practical Decision Rules
+## 实际决策规则
 
-Use these rules when speed is poor:
+当速度差时使用这些规则：
 
-- If the VPS self-test is fast but direct client-to-server download is slow, suspect the access network, ISP path, or cross-border path first.
-- If direct client-to-server download is normal but proxy download is much slower, check the client implementation and client-side proxy settings.
-- If UDP-based Hysteria2 is much faster than TCP-based tests, prefer changing protocol rather than micro-tuning Linux TCP knobs.
-- If a higher declared Hysteria2 bandwidth makes the path slower, move back toward the last proven range instead of assuming that larger values are always better.
-- If single-stream speed is stuck near `8-9 MB/s` on this path, do not promise `30 MB/s` without changing a larger variable such as region, upstream path, or network environment.
+- 如果 VPS 自测快但客户端直连服务器下载慢，首先怀疑接入网络、ISP 路径或跨境路径。
+- 如果客户端直连服务器下载正常但代理下载慢很多，检查客户端实现和客户端代理设置。
+- 如果基于 UDP 的 Hysteria2 比基于 TCP 的测试快很多，优先改变协议而非微调 Linux TCP 旋钮。
+- 如果更高的声明 Hysteria2 带宽使路径变慢，移回上一个证明的范围，而非假设更大的值总是更好。
+- 如果单流速度在此路径上停滞在约 `8-9 MB/s`，不要承诺 `30 MB/s` 而不改变更大的变量，如地域、上游路径或网络环境。
 
-## Recommended Next-Step Logic
+## 建议的后续步骤逻辑
 
-When the target is much higher than the current baseline, the meaningful next variables are:
+当目标远高于当前基准时，有意义的下一个变量是：
 
-- a different local access network or ISP path
-- a different server region
-- an intermediate relay or premium transit path
-- workload-level parallelism instead of chasing single-stream limits
+- 不同的本地接入网络或 ISP 路径
+- 不同的服务器地域
+- 中继或高级传输路径
+- 工作负载级并行而非追逐单流限制
 
-Under the current constraints, protocol choice and moderate Hysteria2 client tuning are already the main effective levers.
+在当前约束下，协议选择和适度 Hysteria2 客户端调优已经是主要有效杠杆。

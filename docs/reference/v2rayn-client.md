@@ -1,72 +1,72 @@
-# Client Configuration
+# 客户端配置
 
-## Current Mainline
+## 当前主线路
 
-The default recommended client protocol is `Hysteria2`.
+默认推荐的客户端协议是 `Hysteria2`。
 
-### Entry Points
+### 入口点
 
-```text
-Subscription: http://74.48.78.17:8080/subscribe
+```
+订阅: http://74.48.78.17:8080/subscribe
 YAML: http://74.48.78.17:8080/hysteria2-client.yaml
-Share link: http://74.48.78.17:8080/hysteria2-link
+分享链接: http://74.48.78.17:8080/hysteria2-link
 ```
 
-### Mainline Parameters
+### 主线路参数
 
-| Item | Value |
+| 项目 | 值 |
 |------|-------|
-| Protocol | `Hysteria2` |
-| Host | `74-48-78-17.nip.io` |
-| Port | `8444/udp` |
+| 协议 | `Hysteria2` |
+| 主机 | `74-48-78-17.nip.io` |
+| 端口 | `8444/udp` |
 | TLS SNI | `74-48-78-17.nip.io` |
-| Recommended client bandwidth | `up: 40 mbps / down: 80 mbps` |
-| Example local socks5 | `127.0.0.1:10888` |
+| 建议客户端带宽 | `上传: 40 mbps / 下载: 80 mbps` |
+| 示例本地 socks5 | `127.0.0.1:10888` |
 
-## Stable Client Rule
+## 稳定客户端规则
 
-For the current path, the best stable result comes from moderate client-side bandwidth declarations. The recommended setting is `up: 40 mbps / down: 80 mbps`.
+对于当前路径，最佳稳定结果来自适度的客户端带宽声明。建议设置为 `上传: 40 mbps / 下载: 80 mbps`。
 
-Do not blindly raise the client bandwidth to values such as `150 mbps`, `500 mbps`, or `1000 mbps`. Over-declaring the client bandwidth makes the current path slower and less stable.
+不要盲目将客户端带宽提高到 `150 mbps`、`500 mbps` 或 `1000 mbps`。过度声明客户端带宽会使当前路径变慢且不稳定。
 
-## Why This Is Mainline
+## 为什么这是主线路
 
-Under the fixed server region and current path conditions:
+在固定服务器地域和当前路径条件下：
 
-- TCP mainline is only about `0.1 MB/s`
-- Hysteria2 reaches about `8-9 MB/s` on a single stream after tuning
-- Parallel downloads are typically around `9-11 MB/s`
+- TCP 主线路仅约 `0.1 MB/s`
+- Hysteria2 调优后单流可达约 `8-9 MB/s`
+- 并行下载通常约 `9-11 MB/s`
 
-For this reason, Hysteria2 is the default recommendation.
+因此，Hysteria2 是默认推荐。
 
-## v2rayN Note
+## v2rayN 说明
 
-For `v2rayN`, keep the Hysteria global setting aligned with the published client value:
+对于 `v2rayN`，保持 Hysteria 全局设置与发布的客户端值一致：
 
 - `UpMbps = 40`
 - `DownMbps = 80`
 - `HopInterval = 30`
 
-If the imported node is correct but throughput is unexpectedly poor, first check whether the local v2rayN Hysteria global values drifted away from the recommended range.
+如果导入的节点正确但吞吐量意外差，首先检查本地 v2rayN Hysteria 全局值是否偏离了推荐范围。
 
-## Subscription Sync Requirement
+## 订阅同步要求
 
-`/subscribe` must always point to the current mainline. While Hysteria2 is mainline, decoding `/subscribe` must yield `hysteria2://...#US-Hysteria2-Main`. If a client refresh still shows `VLESS + tcp`, first check whether `/root/vpn-server/xray/html/subscribe` still contains an old link, then check whether the local v2rayN database still keeps the stale subscription node.
+`/subscribe` 必须始终指向当前主线路。当 Hysteria2 是主线路时，解码 `/subscribe` 必须得到 `hysteria2://...#US-Hysteria2-Main`。如果客户端刷新仍显示 `VLESS + tcp`，首先检查 `/root/vpn-server/xray/html/subscribe` 是否仍包含旧链接，然后检查本地 v2rayN 数据库是否仍保留过期的订阅节点。
 
-## Fallback
+## 备用线路
 
-If the fallback `VLESS + REALITY` line is needed:
+如果需要备用 `VLESS + REALITY` 线路：
 
-- Share link: `http://74.48.78.17:8080/reality-link`
+- 分享链接：`http://74.48.78.17:8080/reality-link`
 
-`/subscribe` is reserved for the current mainline and is no longer the REALITY fallback entry.
+`/subscribe` 保留用于当前主线路，不再是 REALITY 备用入口。
 
-## Acceptance Criteria
+## 验收标准
 
-A client setup is considered correct when all of the following are true:
+当以下全部为真时，客户端设置被认为是正确的：
 
-- The imported node is Hysteria2.
-- The local socks5 port is listening.
-- Access to `https://api.ipify.org` through the local proxy returns `74.48.78.17`.
-- Large-file download speed is materially better than the TCP fallback.
-- The client bandwidth is still near the recommended `40/80` range.
+- 导入的节点是 Hysteria2。
+- 本地 socks5 端口正在监听。
+- 通过本地代理访问 `https://api.ipify.org` 返回 `74.48.78.17`。
+- 大文件下载速度明显优于 TCP 备用线路。
+- 客户端带宽仍接近建议的 `40/80` 范围。

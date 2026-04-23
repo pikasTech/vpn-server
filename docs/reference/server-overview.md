@@ -1,88 +1,88 @@
-# Server Overview
+# 服务器概览
 
-## Goal
+## 目标
 
-This project maintains a self-hosted proxy service for Windows clients. The current mainline is `Hysteria2` because it performs materially better than the TCP-based line under the fixed server region and current network path. `VLESS + REALITY` remains as a fallback only.
+本项目维护一个面向 Windows 客户端的自托管代理服务。当前端线为 `Hysteria2`，因为在固定服务器地域和当前网络路径下，其性能明显优于基于 TCP 的线路。`VLESS + REALITY` 仅作为备用保留。
 
-## Current Online Architecture
+## 当前在线架构
 
-### Mainline
+### 主线路
 
-- Protocol: `Hysteria2`
-- Port: `8444/udp`
-- Config directory: `/root/vpn-server/hysteria2/`
-- Running container: `hysteria2`
-- Client subscription: `http://74.48.78.17:8080/subscribe`
-- Client share link: `http://74.48.78.17:8080/hysteria2-link`
-- Client YAML: `http://74.48.78.17:8080/hysteria2-client.yaml`
+- 协议：`Hysteria2`
+- 端口：`8444/udp`
+- 配置目录：`/root/vpn-server/hysteria2/`
+- 运行容器：`hysteria2`
+- 客户端订阅：`http://74.48.78.17:8080/subscribe`
+- 客户端分享链接：`http://74.48.78.17:8080/hysteria2-link`
+- 客户端 YAML：`http://74.48.78.17:8080/hysteria2-client.yaml`
 
-### Fallback
+### 备用线路
 
-- Protocol: `VLESS + REALITY`
-- Port: `8443/tcp`
-- Config directory: `/root/vpn-server/reality/config/`
-- Running container: `xray8443`
-- Fallback share link: `http://74.48.78.17:8080/reality-link`
+- 协议：`VLESS + REALITY`
+- 端口：`8443/tcp`
+- 配置目录：`/root/vpn-server/reality/config/`
+- 运行容器：`xray8443`
+- 备用分享链接：`http://74.48.78.17:8080/reality-link`
 
-### Distribution Layer
+### 分发层
 
-- nginx config: `/root/vpn-server/xray/nginx.conf`
-- Running container: `xray-nginx`
-- Published file directory: `/root/vpn-server/xray/html/`
+- nginx 配置：`/root/vpn-server/xray/nginx.conf`
+- 运行容器：`xray-nginx`
+- 发布文件目录：`/root/vpn-server/xray/html/`
 
-## Why Hysteria2 Is Mainline
+## 为什么 Hysteria2 是主线路
 
-- The VPS itself has healthy outbound bandwidth.
-- The TCP line is limited to roughly `0.1 MB/s` on the current path.
-- Under the same environment, Hysteria2 reaches about `8-9 MB/s` on a single stream and roughly `9-11 MB/s` with parallel downloads after tuning.
-- The server region is fixed, so the most effective optimization variable is protocol choice, not relocation.
+- VPS 本身有健康的上行带宽。
+- 在当前路径上，TCP 线路被限制在大约 `0.1 MB/s`。
+- 在相同环境下，Hysteria2 单流可达约 `8-9 MB/s`，调优后并行下载约 `9-11 MB/s`。
+- 服务器地域是固定的，所以最有效的优化变量是协议选择，而非迁移。
 
-## Mainline Operating Rule
+## 主线路操作规则
 
-The stable mainline policy is:
+稳定的端线策略：
 
-- Do not set `bandwidth` in `/root/vpn-server/hysteria2/config.yaml`.
-- Publish client guidance through `/root/vpn-server/xray/html/hysteria2-client.yaml` with the recommended client value `up: 40 mbps / down: 80 mbps`.
-- Keep `/subscribe` aligned with the current Hysteria2 share link.
+- 不要在 `/root/vpn-server/hysteria2/config.yaml` 中设置 `bandwidth`。
+- 通过 `/root/vpn-server/xray/html/hysteria2-client.yaml` 发布客户端指南，建议值为 `上传: 40 mbps / 下载: 80 mbps`。
+- 保持 `/subscribe` 与当前 Hysteria2 分享链接同步。
 
-This avoids reintroducing artificial server-side rate caps or unstable over-declared client bandwidth.
+这避免了重新引入人为的服务器端速率限制或不稳定地过度声明客户端带宽。
 
-## Operational Boundaries
+## 操作边界
 
-- `hysteria2` is the default recommended stack.
-- `xray8443` stays available for compatibility and fallback.
-- `xray-nginx` only publishes config files and test artifacts; it does not carry proxy traffic.
-- `/subscribe` always means the current mainline subscription endpoint and must be updated whenever the mainline changes.
-- `docs/reference/` stores stable long-term knowledge; dated records belong in `docs/process/`.
+- `hysteria2` 是默认推荐的堆栈。
+- `xray8443` 保持可用以提供兼容性和备用。
+- `xray-nginx` 仅发布配置文件和测试产物，不承载代理流量。
+- `/subscribe` 始终指向当前主线路订阅端点，主线路变更时必须更新。
+- `docs/reference/` 存储长期稳定的知识；带日期的记录应放在 `docs/process/`。
 
-## Authoritative Values
+## 权威值
 
-| Item | Value |
+| 项目 | 值 |
 |------|-------|
-| Server IP | `74.48.78.17` |
-| Mainline port | `8444/udp` |
-| Fallback port | `8443/tcp` |
-| Mainline subscription | `http://74.48.78.17:8080/subscribe` |
-| Mainline share link | `http://74.48.78.17:8080/hysteria2-link` |
-| Mainline YAML | `http://74.48.78.17:8080/hysteria2-client.yaml` |
-| Server-side bandwidth rule | `unset` |
-| Recommended client bandwidth | `up: 40 mbps / down: 80 mbps` |
-| REALITY fallback share link | `http://74.48.78.17:8080/reality-link` |
+| 服务器 IP | `74.48.78.17` |
+| 主线路端口 | `8444/udp` |
+| 备用端口 | `8443/tcp` |
+| 主线路订阅 | `http://74.48.78.17:8080/subscribe` |
+| 主线路分享链接 | `http://74.48.78.17:8080/hysteria2-link` |
+| 主线路 YAML | `http://74.48.78.17:8080/hysteria2-client.yaml` |
+| 服务器端带宽规则 | `未设置` |
+| 建议客户端带宽 | `上传: 40 mbps / 下载: 80 mbps` |
+| REALITY 备用分享链接 | `http://74.48.78.17:8080/reality-link` |
 
-## Constraints
+## 约束条件
 
-- The server region is fixed and is not an optimization variable.
-- Re-testing from a different local network did not materially change throughput.
-- Further optimization should focus on protocol and client-side behavior first.
-- Under the current path constraints, `30 MB/s` is not a realistic short-term target.
+- 服务器地域是固定的，不是优化变量。
+- 从不同本地网络重新测试没有显著改变吞吐量。
+- 进一步优化应首先关注协议和客户端行为。
+- 在当前路径约束下，`30 MB/s` 不是现实的短期目标。
 
-## Acceptance Criteria
+## 验收标准
 
-The mainline is considered healthy when all of the following are true:
+当以下全部为真时，端线被认为是健康的：
 
-- `docker ps` shows both `hysteria2` and `xray-nginx` as `Up`.
-- `ss -tulpn` shows `8444/udp` and `8080/tcp` listening.
-- `curl http://74.48.78.17:8080/hysteria2-client.yaml` returns a valid client config.
-- `curl http://74.48.78.17:8080/subscribe | base64 -d` returns the current Hysteria2 share link.
-- The published YAML recommends `up: 40 mbps / down: 80 mbps`.
-- A client using the Hysteria2 local socks5 port reaches `https://api.ipify.org` and sees `74.48.78.17`.
+- `docker ps` 显示 `hysteria2` 和 `xray-nginx` 都是 `Up`。
+- `ss -tulpn` 显示 `8444/udp` 和 `8080/tcp` 正在监听。
+- `curl http://74.48.78.17:8080/hysteria2-client.yaml` 返回有效的客户端配置。
+- `curl http://74.48.78.17:8080/subscribe | base64 -d` 返回当前的 Hysteria2 分享链接。
+- 发布的 YAML 建议 `上传: 40 mbps / 下载: 80 mbps`。
+- 使用 Hysteria2 本地 socks5 端口的客户端能到达 `https://api.ipify.org` 并看到 `74.48.78.17`。
