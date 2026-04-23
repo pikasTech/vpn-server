@@ -6,9 +6,5 @@ tls:
   sni: 74-48-78-17.nip.io
   insecure: false
 
-bandwidth:
-  up: 40 mbps
-  down: 80 mbps
-
 socks5:
   listen: 127.0.0.1:10888

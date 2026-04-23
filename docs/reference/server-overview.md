@@ -42,7 +42,7 @@
 稳定的端线策略：
 
 - 不要在 `/root/vpn-server/hysteria2/config.yaml` 中设置 `bandwidth`。
-- 通过 `/root/vpn-server/xray/html/hysteria2-client.yaml` 发布客户端指南，建议值为 `上传: 40 mbps / 下载: 80 mbps`。
+- 通过 `/root/vpn-server/xray/html/hysteria2-client.yaml` 发布客户端 YAML 配置。
 - 保持 `/subscribe` 与当前 Hysteria2 分享链接同步。
 
 这避免了重新引入人为的服务器端速率限制或不稳定地过度声明客户端带宽。
@@ -66,7 +66,6 @@
 | 主线路分享链接 | `http://74.48.78.17:8080/hysteria2-link` |
 | 主线路 YAML | `http://74.48.78.17:8080/hysteria2-client.yaml` |
 | 服务器端带宽规则 | `未设置` |
-| 建议客户端带宽 | `上传: 40 mbps / 下载: 80 mbps` |
 | REALITY 备用分享链接 | `http://74.48.78.17:8080/reality-link` |
 
 ## 约束条件
@@ -84,5 +83,4 @@
 - `ss -tulpn` 显示 `8444/udp` 和 `8080/tcp` 正在监听。
 - `curl http://74.48.78.17:8080/hysteria2-client.yaml` 返回有效的客户端配置。
 - `curl http://74.48.78.17:8080/subscribe | base64 -d` 返回当前的 Hysteria2 分享链接。
-- 发布的 YAML 建议 `上传: 40 mbps / 下载: 80 mbps`。
 - 使用 Hysteria2 本地 socks5 端口的客户端能到达 `https://api.ipify.org` 并看到 `74.48.78.17`。
